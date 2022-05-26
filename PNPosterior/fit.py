@@ -99,7 +99,7 @@ class PosteriorFitting:
         sp.hist(x[(y == 1).flatten()], bins=20, density=True, alpha=0.5)
         sp.hist(x[(y == 0).flatten()], bins=20, density=True, alpha=0.5)
         sp.show()
-        fitting = PosteriorFitting(1, debug=True)
+        fitting = PosteriorFitting(1, debug=False)
         x0 = x[(y == 0).flatten(), :]
         x1 = x[(y == 1).flatten(), :]
         c0 = c[(y == 0).flatten(), :]
