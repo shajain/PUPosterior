@@ -1,5 +1,6 @@
 #import os
 #os.chdir('../PUPosterior')
+import sys
 sys.path.remove(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from plots import sortedplot as sp
