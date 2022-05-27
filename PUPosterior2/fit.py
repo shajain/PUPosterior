@@ -33,16 +33,17 @@ class PosteriorFitting:
         self.PUPost.attachDiscriminator(modelDisc)
         self.disc = Disc(modelDisc)
         self.disc.attachPNPosteriorNet(modelPU)
+        self.trainer = None
 
     def fit(self, data, **kwargs):
         self.fitArgs = {'data': data, **kwargs}
-        trainer = AltTrain(self.PUPost, self.disc, data, **safeRemove(self.trainDEF, 'debug'))
+        self.trainer = AltTrain(self.PUPost, self.disc, data, **safeRemove(self.trainDEF, 'debug'))
         #pdb.set_trace()
         if self.trainDEF['debug']:
             self.debug = Debug()
             self.debug.attachData(data)
-            trainer.attachDebugger(self.debug)
-        trainer.fit( )
+            self.trainer.attachDebugger(self.debug)
+        self.trainer.fit( )
 
     def refit(self):
         self.fit(**self.fitArgs)

@@ -22,7 +22,6 @@ class Trainer:
 
     def fit(self):
         self.beforeTraining()
-        #pdb.set_trace()
         for i in np.arange(self.maxIter):
             # if len(self.valLosses) >= 100 and min(self.valLosses[-100:]) > self.bestValLoss:
             #     break
@@ -33,13 +32,10 @@ class Trainer:
             if valLoss < self.bestValLoss:
                 self.bestValLoss = valLoss
                 self.bestNNLoss = self.nnLoss.copy()
-        #pdb.set_trace()
         return
 
     def iteration(self):
-        #pdb.set_trace()
         self.beforeUpdate()
-        #pdb.set_trace()
         loss, gradients = self.nnLoss.gradients(self.data_tr, self.batchSize)
         self.opt.apply_gradients(zip(gradients, self.nnLoss.getNet( ).trainable_variables))
         self.losses.append(loss)
@@ -88,6 +84,7 @@ class AlternatingTrainer:
         self.debug.attachTrainer(self)
 
     def beforePUUpdate(self):
+        #pdb.set_trace()
         if hasattr(self, 'debug'):
             self.netPUs.append(self.netPU.copy())
             self.debug.beforePUUpdate(self.round)

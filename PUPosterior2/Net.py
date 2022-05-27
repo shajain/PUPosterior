@@ -182,10 +182,10 @@ class PUPosterior2(NetWithLoss):
         return loss, tape.gradient(loss, self.net.trainable_variables)
 
     def posterior(self, x):
-        return self.net.predict(x)
+        return self.net.predict(x, verbose=0)
 
     def posteriorDisc(self, x):
-        return self.disc.predict(x)
+        return self.disc.predict(x, verbose=0)
 
     def histProbs(self, discPost, posterior=None):
         if posterior is None:
@@ -255,10 +255,10 @@ class Discriminator(NetWithLoss):
         return loss, tape.gradient(loss, self.net.trainable_variables)
 
     def posterior(self, x):
-        return self.net.predict(x)
+        return self.net.predict(x, verbose=0)
 
     def pnPosterior(self, x):
-        return self.pnPostNet.predict(x)
+        return self.pnPostNet.predict(x, verbose=0)
 
     def copy(self):
         copy = Discriminator(self.copyNet())

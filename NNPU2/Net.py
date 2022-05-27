@@ -86,7 +86,7 @@ class NNPU(NetWithLoss):
 
 
     def posterior(self, x):
-        return self.net.predict(x)
+        return self.net.predict(x, verbose=0)
 
     def copy(self):
         copy = NNPU(self.copyNet(), self.alpha)

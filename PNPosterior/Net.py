@@ -63,7 +63,7 @@ class PNPosterior(NetWithLoss):
         return loss, tape.gradient(loss, self.net.trainable_variables)
 
     def posterior(self, x):
-        return self.net.predict(x)
+        return self.net.predict(x, verbose=0)
 
     def copy(self):
         copy = PNPosterior(self.copyNet())

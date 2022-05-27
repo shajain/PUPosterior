@@ -24,16 +24,17 @@ class PosteriorFitting:
         model = Model(**self.netDEF)
         model.build((None, dim))
         self.nnLoss = NNLoss(model)
+        self.trainer = None
 
     def fit(self, data, **kwargs):
         self.fitArgs = {'data': data, **kwargs}
-        trainer = Trainer(self.nnLoss, data, **safeRemove(self.trainDEF, 'debug'))
+        self.trainer = Trainer(self.nnLoss, data, **safeRemove(self.trainDEF, 'debug'))
         if self.trainDEF['debug']:
             self.debug = Debug()
             self.debug.attachData(data)
-            trainer.attachDebugger(self.debug)
+            self.trainer.attachDebugger(self.debug)
         #pdb.set_trace()
-        trainer.fit( )
+        self.trainer.fit( )
 
     def getNet(self):
         return self.nnLoss
