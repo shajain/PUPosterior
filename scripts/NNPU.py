@@ -1,5 +1,7 @@
 #import os
 #os.chdir('../PUPosterior')
+sys.path.remove(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from plots import sortedplot as sp
 from NNPU2.fit import PosteriorFitting
 import numpy as np
