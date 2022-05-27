@@ -1,4 +1,4 @@
-#import os
+import os
 #os.chdir('../PUPosterior')
 import sys
 sys.path.remove(os.path.dirname(__file__))
