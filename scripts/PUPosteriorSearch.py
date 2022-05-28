@@ -4,22 +4,23 @@ import sys
 #sys.path.remove(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from plots import sortedplot as sp
-from PNPosterior.fit import PosteriorFitting
+from PUPosteriorSearch.fit import PosteriorFitting
 import numpy as np
 fits = []
 NNLosses = []
-nIter = 10
+nIter = 1
 xs = []
 posteriors = []
+alphas = []
 for i in np.arange(nIter):
-    fit, dataPN = PosteriorFitting.demo()
+    fit, dataPU = PosteriorFitting.demo()
     fits.append(fit)
-    NNLoss = fit.trainer.bestNNLoss
+    NNLoss = fit.trainer.finalNetPU
+    alpha = fit.trainer.finalAlpha
+    alphas.append(alphas)
     NNLosses.append(NNLoss)
-    x1 = dataPN.x1
-    x0 = dataPN.x0
-    x = np.vstack([x1,x0])
-    truePosterior = np.vstack([dataPN.ex1['posterior'],dataPN.ex0['posterior']])
+    x = dataPU.x
+    truePosterior = dataPU.ex['posterior']
     xs.append(x)
     posterior = NNLoss.posterior(x)
     posteriors.append(posterior)
@@ -28,9 +29,11 @@ for i in np.arange(nIter):
     sp.show()
     print('end of iteration '+ str(i))
 
+print(str(alphas))
+
 for i in np.arange(nIter):
     [sp.sortedplot(x, posterior) for (x,posterior) in zip(xs, posteriors)]
     sp.sortedplot(x, truePosterior)
 
 #sp.show()
-sp.savefig('../figures/PNPosterior.png')
+sp.savefig('../figures/PUPosteriorSearch.png')

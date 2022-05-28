@@ -32,17 +32,19 @@ class PosteriorFitting:
         self.PUPost = PUPost(modelPU)
         #self.PUPost.attachDiscriminator(modelDisc)
         self.disc = Disc(modelDisc)
+        self.trainer = None
         #self.disc.attachPNPosteriorNet(modelPU)
 
     def fit(self, data, **kwargs):
         self.fitArgs = {'data': data, **kwargs}
-        trainer = Trainer(self.PUPost, self.disc, data, **safeRemove(self.trainDEF, 'debug'))
+        self.trainer = Trainer(self.PUPost, self.disc, data, **safeRemove(self.trainDEF, 'debug'))
         #pdb.set_trace()
         if self.trainDEF['debug']:
             self.debug = Debug()
             self.debug.attachData(data)
-            trainer.attachDebugger(self.debug)
-        trainer.fit( )
+            self.trainer.attachDebugger(self.debug)
+        netPU, alpha = self.trainer.fit( )
+        return netPU, alpha
 
     def refit(self):
         self.fit(**self.fitArgs)
@@ -90,7 +92,7 @@ class PosteriorFitting:
         sp.hist(x, bins=20, density=True, alpha=0.5)
         sp.hist(x1, bins=20, density=True, alpha=0.5)
         sp.show()
-        fitting = PosteriorFitting(1, debug=True)
+        fitting = PosteriorFitting(1, debug=False)
         ex = {'y': y, 'c': c, 'posterior': posterior}
         ex1 = {'c': c, 'posterior': posterior1}
         dataPU = DataPU(x, x1, ex, ex1, dg)
