@@ -26,9 +26,10 @@ for i in np.arange(nIter):
     sp.show()
     print('end of iteration '+ str(i))
 
+fig, ax = sp.subplots()
+sp.sortedplot(x, truePosterior, ax=ax)
 for i in np.arange(nIter):
-    [sp.sortedplot(x, posterior) for (x,posterior) in zip(xs, posteriors)]
-    sp.sortedplot(x, truePosterior)
+    [sp.sortedplot(x, posterior, ax=ax) for (x,posterior) in zip(xs, posteriors)]
 
 #sp.show()
-sp.savefig('../figures/PUPosterior.png')
+fig.savefig('../figures/PUPosterior.png')

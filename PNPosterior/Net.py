@@ -24,17 +24,17 @@ class PNPosterior(NetWithLoss):
         x0 = data['x0']
         p1 = self.posterior(x1)
         p0 = 1-self.posterior(x0)
-        loss = - self.alpha * np.mean(np.log(p1))/np.mean(p1) \
-            - (1 - self.alpha) * np.mean(np.log(p0))/np.mean(p0)
+        loss = - self.alpha * np.mean(np.log(p1)) - (1 - self.alpha) * np.mean(np.log(p0))
         #loss = - np.mean(np.vstack([np.log(p1), np.log(1-p0)]))
         return loss
 
 
-    def lossTF(self, x, y, a):
-        p = self.net(x)
+    def lossTF(self, x1, x0):
+        p1 = self.net(x1)
+        p0 = 1-self.net(x0)
         #a = tf.reduce_mean(p)
-        loss = - self.alpha*tf.reduce_mean(tf.math.xlogy(y, p))/a \
-               - (1-self.alpha) * tf.reduce_mean(tf.math.xlogy(1-y, 1-p))/(1-a)
+        loss = - self.alpha * tf.reduce_mean(tf.math.log(p1))\
+               - (1-self.alpha) * tf.reduce_mean(tf.math.log(p0))
         #pdb.set_trace()
         return loss
 
@@ -50,16 +50,11 @@ class PNPosterior(NetWithLoss):
         ix0 = np.random.choice(n0, BS, replace=True)
         xx1 = x1[ix1, :]
         xx0 = x0[ix0, :]
-        xx = np.vstack([xx1, xx0])
-        yy = np.vstack([np.ones((xx1.shape[0], 1)), np.zeros((xx0.shape[0], 1))])
         print('alpha used in loss ' + str(self.alpha))
-        a = np.mean(yy)
-        #a1 = 0.35
-        print('a used in loss ' + str(a))
         with tf.GradientTape(watch_accessed_variables=False) as tape:
             # pdb.set_trace()
             tape.watch(self.net.trainable_variables)
-            loss = self.lossTF(xx, yy, a)
+            loss = self.lossTF(xx1, xx0)
         return loss, tape.gradient(loss, self.net.trainable_variables)
 
     def posterior(self, x):

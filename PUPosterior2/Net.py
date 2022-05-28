@@ -63,30 +63,18 @@ class PUPosterior2(NetWithLoss):
 
 
     def valLoss(self, data):
-        x = data['x']
-        x1 = data['x1']
-        p = self.posterior(x)
-        max_p = np.max(p)
-        alpha = np.mean(p)
-        p1 = self.posterior(x1)
-        expf1 = np.mean(p1)
-        expf1hat = np.mean(p*p)/alpha
-        #expf0hat = np.mean((1-p)*p)/(1-alpha)
-        #beta = np.abs((expf1 - (max_p*expf1hat + (1-max_p)*expf0hat))**2
-        beta = np.abs(expf1 - expf1hat)
-        l1 = -(alpha + beta) * (self.gamma * np.mean(np.log(p1)) + (1 - self.gamma) * np.mean(xlogy(p, p)) / alpha)
-        l0 = -np.mean(xlogy(1 - p, 1 - p))
-        loss = l1 + l0
+        loss = self.loss(data)
         return loss
 
     def loss(self, data):
         x = data['x']
         x1 = data['x1']
         p = self.posterior(x)
-        alpha = np.mean(p)
+        a1 = np.mean(p)
+        a0 = np.mean(1-p)
         p1 = self.posterior(x1)
-        l1 = -alpha*(self.gamma * np.mean(np.log(p1)) + (1-self.gamma) * np.mean(xlogy(p, p))/alpha)
-        l0 = -np.mean(xlogy(1-p, 1-p))
+        l1 = -self.alpha*(self.gamma * np.mean(np.log(p1)) + (1-self.gamma) * np.mean(xlogy(p, p))/a1)
+        l0 = -(1-self.alpha)*np.mean(xlogy(1-p, 1-p))/a0
         loss = l1 + l0
         #ix = np.digitize(postTrue, bins)
         return loss

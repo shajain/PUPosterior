@@ -189,11 +189,13 @@ class PUPosterior2(NetWithLoss):
         x = data['x']
         x1 = data['x1']
         p = self.posterior(x)
-        pmax = p/np.max(p)
-        alpha = np.mean(pmax)
+        #pmax = p/np.max(p)
+        #alpha = np.mean(pmax)
         p1 = self.posterior(x1)
-        l1 = -alpha*(self.gamma * np.mean(np.log(p1)) + (1-self.gamma) * np.mean(xlogy(p, p)))
-        l0 = -(1-alpha)* np.mean(xlogy(1-p, 1-p))
+        a1 = np.mean(p)
+        a0 = np.mean(1-p)
+        l1 = -self.alpha*(self.gamma * np.mean(np.log(p1)) + (1-self.gamma) * np.mean(xlogy(p, p))/a1)
+        l0 = -(1-self.alpha) * np.mean(xlogy(1-p, 1-p))/a0
         loss = l1 + l0
         return loss
 

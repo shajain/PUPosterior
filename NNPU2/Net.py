@@ -30,7 +30,7 @@ class NNPU(NetWithLoss):
         alpha = self.alpha
         p1 = self.posterior(x1)
         l1 = alpha * np.mean((1-p1)**2)
-        l0 = max(0, np.mean(p**2) - alpha* np.mean(p1**2))
+        l0 = max(0, np.mean(p**2) - alpha * np.mean(p1**2))
         loss = l1 + l0
         return loss
 
