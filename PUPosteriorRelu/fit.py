@@ -1,8 +1,8 @@
 import numpy as np
 
-from PUPosterior.Net import PUPosterior as NNLoss
-from NN.models import BasicSigmoid as Model
-from NN.trainer import Trainer as Trainer
+from PUPosteriorRelu.Net import PUPosterior as NNLoss
+from NN.models import BasicRelu as Model
+from NN.trainer import PriorAdaptivePUTrainer as Trainer
 from PUPosterior.debug import Debug
 from misc.dictUtils import safeUpdate
 from misc.dictUtils import safeRemove

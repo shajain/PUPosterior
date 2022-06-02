@@ -127,7 +127,7 @@ class Debug:
         pBest_tr = bestNN.posterior(x_tr)
         pBest_te = bestNN.posterior(x_te)
         pBest_val = bestNN.posterior(x_val)
-
+        #pdb.set_trace()
         fpr, tpr, _ = roc_curve(y_tr, pEst_tr)
         self.aucEst_tr.append(auc(fpr, tpr))
         self.axs[0, 1].plot(self.aucEst_tr)

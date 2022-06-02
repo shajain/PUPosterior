@@ -61,6 +61,45 @@ class Trainer:
             self.debug.afterUpdate()
 
 
+class PriorAdaptivePUTrainer(Trainer):
+    def __int__(self, *args):
+        super(PriorAdaptivePUTrainer, self).__init__(*args)
+
+    def fit(self):
+        self.beforeTraining()
+        for i in np.arange(self.maxIter):
+            # if len(self.valLosses) >= 100 and min(self.valLosses[-100:]) > self.bestValLoss:
+            #     break
+            postByPriorMax, postByPriorMin = self.nnLoss.posteriorByPriorMaxMin(self.data_val)
+
+            if postByPriorMax > 1 and postByPriorMax - postByPriorMin > 0.5:
+                alpha = min(1/postByPriorMax, 0.99)
+            else:
+                alpha = 0.5
+
+            print(postByPriorMin)
+            print(postByPriorMax)
+            print(alpha)
+            print('======')
+            hypPar = {'alpha': alpha}
+            self.iter = i
+            self.iteration(hypPar)
+            valLoss = self.nnLoss.valLoss(self.data_val)
+            self.valLosses.append(valLoss)
+            if valLoss < self.bestValLoss:
+                self.bestValLoss = valLoss
+                self.bestNNLoss = self.nnLoss.copy()
+        return
+
+    def iteration(self, hypPar):
+        self.beforeUpdate()
+        loss, gradients = self.nnLoss.gradients(self.data_tr, self.batchSize, hypPar)
+        self.opt.apply_gradients(zip(gradients, self.nnLoss.getNet().trainable_variables))
+        self.losses.append(loss)
+        self.afterUpdate()
+        return
+
+
 
 class AlternatingTrainer:
     def __init__(self, netPU, netDisc, data, rounds, maxIter, batchSize):
