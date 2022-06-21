@@ -37,14 +37,18 @@ class PUPosterior(NetWithLoss):
         return loss
 
     def lossTF(self, x1, x, pmaxed1, a1, pmaxed0, a0, alpha):
-        p = tf.clip_by_value(alpha*self.net(x), 0, 1)
-        p1 = tf.clip_by_value(alpha*self.net(x1), 0, 1)
+        p = alpha * self.net(x)
+        penalty = 100 * tf.reduce_sum(tf.nn.relu(p - 1))
+        p = tf.clip_by_value(p, 0, 1)
+        p1 = alpha * self.net(x1)
+        penalty1 = 100 * tf.reduce_sum(tf.nn.relu(p1 - 1))
+        p1 = tf.clip_by_value(p1, 0, 1)
         l1 = -alpha * (self.gamma * tf.reduce_mean(tf.math.log(p1)) +
                       (1 - self.gamma) * tf.reduce_mean(tf.math.xlogy(pmaxed1, p))/a1)
         l0 = -(1 - alpha) * tf.reduce_mean(tf.math.xlogy(pmaxed0, 1-p))/a0
         loss = l1 + l0
         #pdb.set_trace()
-        return loss
+        return loss + penalty1 + penalty
 
 
     def gradients(self, data, BS, hypPar):
@@ -86,4 +90,5 @@ class PUPosterior(NetWithLoss):
 
     def copy(self):
         copy = PUPosterior(self.copyNet())
+        copy.alpha = np.copy(self.alpha)
         return copy

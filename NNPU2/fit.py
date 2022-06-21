@@ -15,7 +15,7 @@ from TrainTestVal.utilities import CVSplits
 
 class PosteriorFitting:
 
-    netDEF = {'n_units': 10, 'n_hidden': 5, 'dropout_rate': 0.5}
+    netDEF = {'n_units': 5, 'n_hidden': 3, 'dropout_rate': 0.5}
     trainDEF =  {'batchSize': 200, 'maxIter': 500, 'debug': False}
 
     def __init__(self, dim, alpha, **kwargs):
@@ -86,7 +86,7 @@ class PosteriorFitting:
         sp.hist(x, bins=20, density=True, alpha=0.5)
         sp.hist(x1, bins=20, density=True, alpha=0.5)
         sp.show( )
-        fitting = PosteriorFitting(1, alpha, debug=False)
+        fitting = PosteriorFitting(1, alpha, debug=True)
         ex = {'y': y, 'c': c, 'posterior': posterior}
         ex1 = {'c': c, 'posterior': posterior1}
         dataPU = DataPU(x, x1, ex, ex1, dg)

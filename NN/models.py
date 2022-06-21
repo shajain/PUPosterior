@@ -116,7 +116,7 @@ class BasicRelu(tf.keras.Model):
                 self.Dens.append(layers.Dense(n_units, activation='relu'))
             self.BN.append(layers.BatchNormalization())
             self.Drop.append(layers.Dropout(dropout_rate))
-        self.dens_last = layers.Dense(1)
+        self.dens_last = layers.Dense(1, activation = 'relu')
         # self.BN_last = layers.BatchNormalization()
         # self.sigmoid = activations.sigmoid()
 
@@ -134,7 +134,7 @@ class BasicRelu(tf.keras.Model):
         return x
 
     def new(self):
-        copy = BasicSigmoid(self.n_units, self.n_hidden, self.dropout_rate)
+        copy = BasicRelu(self.n_units, self.n_hidden, self.dropout_rate)
         input_dim = self.layers[0].weights[0].shape[0]
         copy.build((None, input_dim))
         return copy

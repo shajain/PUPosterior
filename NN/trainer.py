@@ -77,6 +77,8 @@ class PriorAdaptivePUTrainer(Trainer):
             else:
                 alpha = 0.5
 
+            alpha = 0.35
+
             print(postByPriorMin)
             print(postByPriorMax)
             print(alpha)

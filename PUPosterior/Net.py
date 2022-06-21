@@ -15,29 +15,9 @@ class PUPosterior(NetWithLoss):
         super(PUPosterior, self).__init__(net)
         self.BCE =BinaryCrossentropy()
         self.alpha = 0.5
-        self.alpha_ub = 1
-        self.alpha_lb = 0
         self.gamma = 0.5
         self.iter = 1
-        self.binarySearch = False
-        self.historySize = 10
-        self.historyIrr = {'train': np.zeros((self.historySize,)), 'val': np.zeros((self.historySize,))}
-        self.historyIx = {'train': 0, 'val': 0}
-        self.irr_prop_thr = 0.01
-        self.irr_thr = 0.98
 
-
-    def resetHistory(self):
-        for set in ['train', 'val']:
-            self.historyIrr[set] = np.zeros((self.historySize,))
-            self.historyIx[set] = 0
-
-    def add2History(self, irr_prop, set):
-        self.historyIrr[set][self.historyIx[set] % self.historySize] = irr_prop
-        self.historyIx[set] = self.historyIx[set] + 1
-
-    def historySatisifiesIrr(self, set):
-        return np.mean(self.historyIrr[set] > self.irr_prop_thr)
 
     def valLoss(self, data):
         loss = self.loss(data)
@@ -67,24 +47,6 @@ class PUPosterior(NetWithLoss):
         #pdb.set_trace()
         return loss
 
-    def determineAlpha(self, x):
-        if self.historySatisifiesIrr('train') == 1:
-            self.alpha_ub = np.mean(self.posterior(x))
-            self.resetHistory()
-            self.alpha = (self.alpha_lb + self.alpha_ub)/2
-        elif self.historySatisifiesIrr('train') == 0:
-            self.alpha_lb = np.mean(self.posterior(x))
-            self.resetHistory()
-            self.alpha = (self.alpha_lb + self.alpha_ub)/2
-        return self.alpha
-
-    def determineAlpha2(self, max_p, alpha):
-        print('max_p' + str(max_p))
-        if max_p > 0.99:
-            print('decrease alpha mode')
-            alpha = alpha - 0.01
-        print('alpha' + str(alpha))
-        return alpha
 
     def gradients(self, data, BS):
         x = data['x']
@@ -106,29 +68,30 @@ class PUPosterior(NetWithLoss):
         #print('max_p_all' + str(max_p_all))
         pxx1 = self.posterior(xx1)
         print('max_p: ' + str(np.max(pxx1)))
-        irr_prop = np.mean(pxx1 > self.irr_thr)
-        #print('irr_prop: ' + str(irr_prop))
-        self.add2History(irr_prop, 'train')
-        if (not self.binarySearch) and self.historySatisifiesIrr('train') == 1:
-            self.binarySearch = True
-        if not self.binarySearch:
-            self.alpha = a1 / (a1 + a0)
-        else:
-            self.alpha = self.determineAlpha(x)
+        pxx1 = pxx1/np.max(pxx1)
 
-        #self.alpha = 0.1094
+        ix_highP = (pmaxed1 > 0.8).flatten()
+        ix1_highP = (pxx1 > 0.8).flatten()
+        xx1_highP = xx1[ix1_highP,:]
+        xx_highP = xx[ix_highP, :]
+        pmaxed1_highP = pmaxed1[ix_highP, :]
+        pmaxed0_highP = pmaxed0[ix_highP, :]
+        a1_highP = np.mean(pmaxed1_highP)
+        a0_highP = np.mean(pmaxed0_highP)
+        alpha_highP = (self.alpha/np.mean(p))*np.mean(p[ix_highP,:])
+        if np.max(pxx1) < 0.9 or max_p < 0.9:
+            alpha_highP = max(a1_highP*0.95, alpha_highP)
+
         self.alpha = 0.35
         print('alpha: ' + str(self.alpha))
-        #print('alpha_ub: ' + str(self.alpha_ub))
-        #print('alpha_lb: ' + str(self.alpha_lb))
-        #self.alpha = a1 / (a1 + a0)
-        #alpha = 0.35
-        #pdb.set_trace()
+        print('alpha_highP' + str(alpha_highP))
         self.iter = self.iter + 1
         with tf.GradientTape(watch_accessed_variables=False) as tape:
             # pdb.set_trace()
             tape.watch(self.net.trainable_variables)
             loss = self.lossTF(xx1, xx, pmaxed1, a1, pmaxed0, a0, self.alpha)
+            loss_highP = self.lossTF(xx1_highP, xx_highP, pmaxed1_highP, a1_highP, pmaxed0_highP, a0_highP, alpha_highP)
+            loss = loss + 0.1*loss_highP
         return loss, tape.gradient(loss, self.net.trainable_variables)
 
     def posterior(self, x):
