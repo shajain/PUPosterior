@@ -20,13 +20,13 @@ class Trainer:
     def loss(self):
         return self.nnLoss.loss(self.data)
 
-    def fit(self):
+    def fit(self, hypPar=None):
         self.beforeTraining()
         for i in np.arange(self.maxIter):
             # if len(self.valLosses) >= 100 and min(self.valLosses[-100:]) > self.bestValLoss:
             #     break
             self.iter = i
-            self.iteration( )
+            self.iteration(hypPar)
             valLoss = self.nnLoss.valLoss(self.data_val)
             self.valLosses.append(valLoss)
             if valLoss < self.bestValLoss:
@@ -34,9 +34,9 @@ class Trainer:
                 self.bestNNLoss = self.nnLoss.copy()
         return
 
-    def iteration(self):
+    def iteration(self, hypPar):
         self.beforeUpdate()
-        loss, gradients = self.nnLoss.gradients(self.data_tr, self.batchSize)
+        loss, gradients = self.nnLoss.gradients(self.data_tr, self.batchSize, hypPar)
         self.opt.apply_gradients(zip(gradients, self.nnLoss.getNet( ).trainable_variables))
         self.losses.append(loss)
         self.afterUpdate()

@@ -16,7 +16,7 @@ from TrainTestVal.utilities import CVSplits
 class PosteriorFitting:
 
     netDEF = {'n_units': 10, 'n_hidden': 5, 'dropout_rate': 0.5}
-    trainDEF =  {'batchSize': 200, 'maxIter': 500, 'debug': False}
+    trainDEF =  {'batchSize': 200, 'maxIter': 400, 'debug': False}
 
     def __init__(self, dim, **kwargs):
         self.netDEF = safeUpdate(PosteriorFitting.netDEF, kwargs)
@@ -34,7 +34,10 @@ class PosteriorFitting:
             self.debug.attachData(data)
             self.trainer.attachDebugger(self.debug)
         #pdb.set_trace()
-        self.trainer.fit( )
+        if 'hypPar' in kwargs:
+            self.trainer.fit(kwargs['hypPar'])
+        else:
+            self.trainer.fit()
 
     def getNet(self):
         return self.nnLoss
@@ -47,11 +50,11 @@ class PosteriorFitting:
 
 
     @classmethod
-    def fromDataPU(cls, dataPU):
+    def fromDataPU(cls, dataPU, hypPar=None):
         x = dataPU.x
         nDims = x.shape[1]
-        fitting = PosteriorFitting(nDims, debug=True)
-        fitting.fit(dataPU)
+        fitting = PosteriorFitting(nDims, debug=False)
+        fitting.fit(dataPU, hypPar=hypPar)
         return fitting, dataPU
 
     @classmethod
@@ -70,7 +73,7 @@ class PosteriorFitting:
         return fitting, dataPU
 
     @classmethod
-    def demo(cls):
+    def demo(cls, hypPar):
         alpha = 0.35
         mu = -1
         sig = 1
@@ -90,7 +93,7 @@ class PosteriorFitting:
         ex = {'y': y, 'c': c, 'posterior': posterior}
         ex1 = {'c': c, 'posterior': posterior1}
         dataPU = DataPU(x, x1, ex, ex1, dg)
-        fitting.fit(dataPU)
+        fitting.fit(dataPU, hypPar=hypPar)
         return fitting, dataPU
 
     @classmethod

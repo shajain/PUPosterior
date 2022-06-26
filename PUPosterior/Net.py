@@ -24,6 +24,10 @@ class PUPosterior(NetWithLoss):
         return loss
 
     def loss(self, data):
+        return self.varLoss(data)
+
+
+    def resamplingloss(self, data):
         x = data['x']
         x1 = data['x1']
         p = self.posterior(x)
@@ -35,63 +39,95 @@ class PUPosterior(NetWithLoss):
         loss = l1 + l0
         return loss
 
+    def varLoss(self, data):
+        x = data['x']
+        x1 = data['x1']
+        p = self.posterior(x)
+        p1 = self.posterior(x1)
+        loss = np.log(np.mean(p)) - np.mean(np.log(p1))
+        return loss
 
-    def lossTF(self, x1, x, pmaxed1, a1, pmaxed0, a0, alpha):
-        p = self.net(x)
-        p1 = self.net(x1)
-        l1 = -alpha * (self.gamma * tf.reduce_mean(tf.math.log(p1)) +
-                      (1 - self.gamma) * tf.reduce_mean(tf.math.xlogy(pmaxed1, p))/a1)
-        l0 = -(1 - alpha) * tf.reduce_mean(tf.math.xlogy(pmaxed0, 1-p))/a0
+
+    def lossTF(self, x1, x, alpha, wL, wPosUL, wNegUL):
+        post = self.net(x)
+        post1 = self.net(x1)
+        l1 = -alpha * (self.gamma * tf.reduce_mean(tf.math.xlogy(wL,post1))/np.mean(wL) +
+                       (1 - self.gamma) * tf.reduce_mean(tf.math.xlogy(wPosUL, post)) /np.mean(wPosUL))
+        l0 = -(1 - alpha) * tf.reduce_mean(tf.math.xlogy(wNegUL, 1 - post)) / np.mean(wNegUL)
         #l2 = -alpha * tf.math.log(tf.reduce_mean(p)) - (1 - alpha) * tf.math.log(tf.reduce_mean(1-p))
         loss = l1 + l0
         #pdb.set_trace()
         return loss
 
 
-    def gradients(self, data, BS):
+    def gradients(self, data, BS, hypPar=None):
         x = data['x']
         x1 = data['x1']
         n = x.shape[0]
         n1 = x1.shape[0]
+        if hypPar is None:
+            self.alpha = 0.35
+        else:
+            self.alpha = hypPar['alpha']
+
         BSx = np.cast['int64'](BS/self.alpha)
         ix1 = np.random.choice(n1, BS, replace=True)
         ix = np.random.choice(n, BSx, replace=True)
         xx1 = x1[ix1, :]
         xx = x[ix, :]
-        p = self.posterior(xx)
-        max_p = np.max(p)
-        pmaxed1 = p/max_p
-        pmaxed0 = (1 - p) / np.max(1 - p)
-        a1 = np.mean(pmaxed1)
-        a0 = np.mean(pmaxed0)
-        #max_p_all = np.max(self.posterior(x))
-        #print('max_p_all' + str(max_p_all))
-        pxx1 = self.posterior(xx1)
-        print('max_p: ' + str(np.max(pxx1)))
-        pxx1 = pxx1/np.max(pxx1)
+        postPosUL = self.posterior(xx)
+        alphaHat = np.mean(postPosUL)
+        postPosL = self.posterior(xx1)
+        postPosMax = np.max(np.vstack((postPosUL,postPosL)))
+        postNegMax = np.max(1-np.vstack((postPosUL, postPosL)))
+        postPosUL = postPosUL/postPosMax
+        postNegUL = (1 - postPosUL)/postNegMax
+        postPosL = postPosL/postPosMax
+        wPosUL = postPosUL
+        wNegUL = postNegUL
+        wL = np.ones_like(postPosL)
+        vPosUL = wPosUL * (postPosUL**2)
+        vNegUL = wNegUL * (postPosUL**2)
+        vL = wL * (postPosL**2)
+        alphaMaxHat = np.mean(postPosUL)
+        alpha_v = np.mean(vPosUL)/np.mean(postPosUL**2)
 
-        ix_highP = (pmaxed1 > 0.8).flatten()
-        ix1_highP = (pxx1 > 0.8).flatten()
-        xx1_highP = xx1[ix1_highP,:]
-        xx_highP = xx[ix_highP, :]
-        pmaxed1_highP = pmaxed1[ix_highP, :]
-        pmaxed0_highP = pmaxed0[ix_highP, :]
-        a1_highP = np.mean(pmaxed1_highP)
-        a0_highP = np.mean(pmaxed0_highP)
-        alpha_highP = (self.alpha/np.mean(p))*np.mean(p[ix_highP,:])
-        if np.max(pxx1) < 0.9 or max_p < 0.9:
-            alpha_highP = max(a1_highP*0.95, alpha_highP)
+        #if postPosMax > 0.9:
+        if True:
+            alpha_v = (self.alpha/alphaMaxHat) * alpha_v
+        else:
+            alpha_v = alpha_v * 0.95
+        print('posterior maximum: ' + str(postPosMax))
 
-        self.alpha = 0.35
+
+        # ix_highP = (wPosUL > 0.8).flatten()
+        # ix1_highP = (wPosL > 0.8).flatten()
+        # xx1_highP = xx1[ix1_highP,:]
+        # xx_highP = xx[ix_highP, :]
+        # pmaxed1_highP = pmaxed1[ix_highP, :]
+        # pmaxed0_highP = pmaxed0[ix_highP, :]
+        # a1_highP = np.mean(pmaxed1_highP)
+        # a0_highP = np.mean(pmaxed0_highP)
+        # alpha_highP = (self.alpha/np.mean(postPosUL))*np.mean(postPosUL[ix_highP,:])
+        # w1 = np.ones((xx1.shape[0], 1))
+
+
+
         print('alpha: ' + str(self.alpha))
-        print('alpha_highP' + str(alpha_highP))
+        print('weighted alpha : ' + str(alpha_v))
         self.iter = self.iter + 1
         with tf.GradientTape(watch_accessed_variables=False) as tape:
             # pdb.set_trace()
             tape.watch(self.net.trainable_variables)
-            loss = self.lossTF(xx1, xx, pmaxed1, a1, pmaxed0, a0, self.alpha)
-            loss_highP = self.lossTF(xx1_highP, xx_highP, pmaxed1_highP, a1_highP, pmaxed0_highP, a0_highP, alpha_highP)
-            loss = loss + 0.1*loss_highP
+            loss = self.lossTF(xx1, xx, self.alpha, wL, wPosUL, wNegUL)
+            #if self.iter < 200 or postPosMax < 0.9:
+            #if self.iter < 200:
+            if True:
+                loss_weighted = self.lossTF(xx1, xx, alpha_v, vL, vPosUL, vNegUL)
+                loss = loss + 0.1*loss_weighted
+            else:
+                #loss = self.lossTF(xx1, xx, alpha_v, vL, vPosUL, vNegUL)
+                print('not using weighted loss')
         return loss, tape.gradient(loss, self.net.trainable_variables)
 
     def posterior(self, x):
