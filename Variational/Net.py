@@ -39,12 +39,14 @@ class PUPosterior(NetWithLoss):
     def lossTF(self, x1, x, alpha):
         post = self.net(x)
         post1 = self.net(x1)
-        alphaHat = tf.reduce_mean(post)
+        alphaHat = tf.math.reduce_mean(post)
 
-        loss = tf.math.log(alphaHat) - tf.reduce_mean(np.log(post1))
+        loss = tf.math.log(alphaHat) - tf.math.reduce_mean(tf.math.log(post1))
         #priorLoss = -alpha*tf.math.log(alphaHat) - (1-alpha)* tf.math.log(1-alphaHat)
         #pdb.set_trace()
-        #loss = loss + 10*priorLoss
+        priorLoss = tf.nn.relu(alpha - alphaHat)
+        #pdb.set_trace()
+        loss = loss + 10*priorLoss
         return loss
 
 
