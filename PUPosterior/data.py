@@ -14,11 +14,11 @@ class DataPU:
         self.x1 = x1
         self.ex = ex
         self.ex1 = ex1
-        self.dg = None
         if dg is not None:
             self.dg = dg
             self.hasDG = True
         else:
+            self.dg = None
             self.hasDG = False
 
     def getTTVUL(self, i=None):

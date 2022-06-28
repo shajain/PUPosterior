@@ -16,7 +16,7 @@ from TrainTestVal.utilities import CVSplits
 class PosteriorFitting:
 
     netDEF = {'n_units': 10, 'n_hidden': 5, 'dropout_rate': 0.5}
-    trainDEF =  {'batchSize': 200, 'maxIter': 10, 'debug': False}
+    trainDEF =  {'batchSize': 200, 'maxIter': 400, 'debug': False}
 
     def __init__(self, dim, **kwargs):
         self.netDEF = safeUpdate(PosteriorFitting.netDEF, kwargs)
