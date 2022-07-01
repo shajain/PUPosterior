@@ -76,28 +76,31 @@ class PUPosterior(NetWithLoss):
         xx1 = x1[ix1, :]
         xx = x[ix, :]
         postPosUL = self.posterior(xx)
+        postNegUL = 1 - postPosUL
         alphaHat = np.mean(postPosUL)
         postPosL = self.posterior(xx1)
-        postPosMax = np.max(np.vstack((postPosUL,postPosL)))
-        postNegMax = np.max(1-np.vstack((postPosUL, postPosL)))
+        postPosAll = np.vstack((postPosUL,postPosL))
+        postPosMax = np.max(postPosAll)
+        postNegMax = np.max(1-postPosAll)
         postPosUL = postPosUL/postPosMax
-        postNegUL = (1 - postPosUL)/postNegMax
+        postNegUL = postNegUL/postNegMax
         postPosL = postPosL/postPosMax
         wPosUL = postPosUL
         wNegUL = postNegUL
         wL = np.ones_like(postPosL)
-        vPosUL = wPosUL * (postPosUL**2)
-        vNegUL = wNegUL * (postPosUL**2)
-        vL = wL * (postPosL**2)
+        vPosUL = wPosUL * (postPosUL**1)
+        vNegUL = wNegUL * (postPosUL**1)
+        vL = wL * (postPosL**1)
         alphaMaxHat = np.mean(postPosUL)
-        alpha_v = np.mean(vPosUL)/np.mean(postPosUL**2)
+        alpha_v = np.mean(vPosUL)/np.mean(postPosUL**1)
 
-        #if postPosMax > 0.9:
-        if True:
+        if postPosMax > 0.9:
+        #if True:
             alpha_v = (self.alpha/alphaMaxHat) * alpha_v
         else:
             alpha_v = alpha_v * 0.95
         print('posterior maximum: ' + str(postPosMax))
+        #alpha_v = 0.47
 
 
         # ix_highP = (wPosUL > 0.8).flatten()
@@ -120,11 +123,11 @@ class PUPosterior(NetWithLoss):
             # pdb.set_trace()
             tape.watch(self.net.trainable_variables)
             loss = self.lossTF(xx1, xx, self.alpha, wL, wPosUL, wNegUL)
-            #if self.iter < 200 or postPosMax < 0.9:
+            if self.iter < 200 or postPosMax < 0.9:
             #if self.iter < 200:
-            if True:
+            #if True:
                 loss_weighted = self.lossTF(xx1, xx, alpha_v, vL, vPosUL, vNegUL)
-                loss = loss + 0.1*loss_weighted
+                loss = loss + 0.5*loss_weighted
             else:
                 #loss = self.lossTF(xx1, xx, alpha_v, vL, vPosUL, vNegUL)
                 print('not using weighted loss')
