@@ -88,11 +88,11 @@ class PUPosterior(NetWithLoss):
         wPosUL = postPosUL
         wNegUL = postNegUL
         wL = np.ones_like(postPosL)
-        vPosUL = wPosUL * (postPosUL**1)
-        vNegUL = wNegUL * (postPosUL**1)
-        vL = wL * (postPosL**1)
+        vPosUL = wPosUL * (postPosUL**2)
+        vNegUL = wNegUL * (postPosUL**2)
+        vL = wL * (postPosL**2)
         alphaMaxHat = np.mean(postPosUL)
-        alpha_v = np.mean(vPosUL)/np.mean(postPosUL**1)
+        alpha_v = np.mean(vPosUL)/np.mean(postPosUL**2)
 
         if postPosMax > 0.9:
         #if True:
