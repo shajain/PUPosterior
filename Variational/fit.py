@@ -73,7 +73,7 @@ class PosteriorFitting:
         return fitting, dataPU
 
     @classmethod
-    def demo(cls, hypPar):
+    def demo(cls, hypPar=None):
         alpha = 0.35
         mu = -1
         sig = 1
@@ -89,7 +89,7 @@ class PosteriorFitting:
         sp.hist(x, bins=20, density=True, alpha=0.5)
         sp.hist(x1, bins=20, density=True, alpha=0.5)
         sp.show( )
-        fitting = PosteriorFitting(1, debug=True)
+        fitting = PosteriorFitting(1, debug=False)
         ex = {'y': y, 'c': c, 'posterior': posterior}
         ex1 = {'c': c, 'posterior': posterior1}
         dataPU = DataPU(x, x1, ex, ex1, dg)
