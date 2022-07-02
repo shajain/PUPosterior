@@ -89,7 +89,7 @@ class PosteriorFitting:
         sp.hist(x, bins=20, density=True, alpha=0.5)
         sp.hist(x1, bins=20, density=True, alpha=0.5)
         sp.show( )
-        fitting = PosteriorFitting(1, debug=False)
+        fitting = PosteriorFitting(1, debug=True)
         ex = {'y': y, 'c': c, 'posterior': posterior}
         ex1 = {'c': c, 'posterior': posterior1}
         dataPU = DataPU(x, x1, ex, ex1, dg)
