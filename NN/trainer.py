@@ -9,6 +9,7 @@ class Trainer:
         self.opt = tf.keras.optimizers.Adam( )
         self.nnLoss = nnLoss
         self.data_tr, _, self.data_val = data.getTTVData()
+        self.xCombVal = np.vstack((self.data_val['x'], self.data_val['x1']))
         self.data = data
         self.batchSize = batchSize
         self.maxIter = maxIter
@@ -26,10 +27,24 @@ class Trainer:
             # if len(self.valLosses) >= 100 and min(self.valLosses[-100:]) > self.bestValLoss:
             #     break
             self.iter = i
+            postPosUL = self.nnLoss.posterior(self.data_val['x'])
+            postPosL = self.nnLoss.posterior(self.data_val['x1'])
+            alphaHat = np.mean(postPosUL)
+            postPosMax = np.max(np.vstack((postPosUL, postPosL)))
+            postNegMax = np.max(1-np.vstack((postPosUL, postPosL)))
+            alphaMaxHat = np.mean(postPosUL/postPosMax)
+            if hypPar is None:
+                hypPar = dict()
+
+            hypPar['postPosMax'] = postPosMax
+            hypPar['postNegMax'] = postNegMax
+            hypPar['alphaHat'] = alphaHat
+            hypPar['alphaMaxHat'] = alphaMaxHat
+
             self.iteration(hypPar)
             valLoss = self.nnLoss.valLoss(self.data_val)
             self.valLosses.append(valLoss)
-            if valLoss < self.bestValLoss:
+            if valLoss < self.bestValLoss and postPosMax > 0.9:
                 self.bestValLoss = valLoss
                 self.bestNNLoss = self.nnLoss.copy()
         return

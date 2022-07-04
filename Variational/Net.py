@@ -81,11 +81,18 @@ class PUPosterior(NetWithLoss):
 
         postPosUL = self.posterior(xx)
         postNegUL = 1 - postPosUL
-        alphaHat = np.mean(postPosUL)
+        if 'alphaHat' in hypPar:
+            alphaHat = hypPar['alphaHat']
+        else:
+            alphaHat = np.mean(postPosUL)
         postPosL = self.posterior(xx1)
-        postPosAll = np.vstack((postPosUL, postPosL))
-        postPosMax = np.max(postPosAll)
-        postNegMax = np.max(1 - postPosAll)
+        if 'postPosMax' in hypPar:
+            postPosMax = hypPar['postPosMax']
+            postNegMax = hypPar['postNegMax']
+        else:
+            postPosAll = np.vstack((postPosUL, postPosL))
+            postPosMax = np.max(postPosAll)
+            postNegMax = np.max(1 - postPosAll)
         postPosUL = postPosUL / postPosMax
         postNegUL = postNegUL / postNegMax
         postPosL = postPosL / postPosMax
@@ -95,7 +102,10 @@ class PUPosterior(NetWithLoss):
         vPosUL = wPosUL * (postPosUL ** 2)
         vNegUL = wNegUL * (postPosUL ** 2)
         vL = wL * (postPosL ** 2)
-        alphaMaxHat = np.mean(postPosUL)
+        if 'alphaMaxHat' in hypPar:
+            alphaMaxHat = hypPar['alphaMaxHat']
+        else:
+            alphaMaxHat = np.mean(postPosUL)
         alpha_v = np.mean(vPosUL) / np.mean(postPosUL ** 2)
 
         if postPosMax > 0.9:
@@ -112,11 +122,11 @@ class PUPosterior(NetWithLoss):
             # pdb.set_trace()
             tape.watch(self.net.trainable_variables)
             loss = self.lossVariationalTF(xx1, xx)
-            if self.iter < 200 or postPosMax < 0.9:
+            if postPosMax < 0.9:
                 # if self.iter < 200:
                 # if True:
                 loss_weighted = self.lossWeightedTF(xx1, xx, alpha_v, vL, vPosUL, vNegUL)
-                loss = loss + 0.5 * loss_weighted
+                loss = loss + 0.1 * loss_weighted
             else:
                 # loss = self.lossTF(xx1, xx, alpha_v, vL, vPosUL, vNegUL)
                 print('not using weighted loss')
