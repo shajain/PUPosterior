@@ -138,6 +138,7 @@ class PUPosterior(NetWithLoss):
 
     def copy(self):
         copy = PUPosterior(self.copyNet())
+        copy.alpha = np.copy(self.alpha)
         return copy
 
 

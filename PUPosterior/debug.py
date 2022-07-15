@@ -41,8 +41,9 @@ class Debug:
         self.axs[0, 0].set_title('PU Loss')
 
 
-    def plotPosteriorFit(self):
-        net = self.trainer.nnLoss
+    def plotPosteriorFit(self, net=None):
+        if net is None:
+            net = self.trainer.nnLoss
         bestNN = self.trainer.bestNNLoss
         x_val = self.data_val['x']
         x_tr = self.data_tr['x']
@@ -103,8 +104,10 @@ class Debug:
         #    sp.sortedplot(self.x, self.posteriorFit[-2], label='Posterior Est. Old',  ax=self.axs[1, 0])
         # pdb.set_trace()
 
-    def plotAUCs(self):
-        net = self.trainer.nnLoss
+
+    def plotAUCs(self, net=None):
+        if net is None:
+            net = self.trainer.nnLoss
         bestNN = self.trainer.bestNNLoss
         x_tr = self.data_tr['x']
         x_te = self.data_te['x']

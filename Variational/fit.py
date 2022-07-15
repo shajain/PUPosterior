@@ -2,7 +2,7 @@ import numpy as np
 
 from Variational.Net import PUPosterior as NNLoss
 from NN.models import BasicSigmoid as Model
-from NN.trainer import Trainer as Trainer
+from Variational.trainer import TrainerVariational as Trainer
 from PUPosterior.debug import Debug
 from misc.dictUtils import safeUpdate
 from misc.dictUtils import safeRemove
@@ -11,12 +11,13 @@ from DataGenDistributions.datagen import GaussianDG
 from DataGenDistributions.randomParameters import NormalMixPNParameters
 from PUPosterior.data import DataPU
 from TrainTestVal.utilities import CVSplits
+from DataGenDistributions.datagen import NormalMixDG
 
 
 class PosteriorFitting:
 
     netDEF = {'n_units': 10, 'n_hidden': 5, 'dropout_rate': 0.5}
-    trainDEF =  {'batchSize': 200, 'maxIter': 400, 'debug': False}
+    trainDEF =  {'batchSize': 200, 'maxIter': 800, 'debug': False}
 
     def __init__(self, dim, **kwargs):
         self.netDEF = safeUpdate(PosteriorFitting.netDEF, kwargs)
@@ -73,11 +74,13 @@ class PosteriorFitting:
         return fitting, dataPU
 
     @classmethod
-    def demo(cls, hypPar=None):
-        alpha = 0.35
+    def demo(cls, alpha=None, hypPar=None):
+        if alpha is None:
+            alpha = 0.35
         mu = -1
         sig = 1
-        dg = GaussianDG(mu=mu, sig=sig, alpha=alpha)
+        #dg = GaussianDG(mu=mu, sig=sig, alpha=alpha)
+        dg = NormalMixDG([-1,1], [1,1], np.array([0.7,0.3]), [0], [1], np.array([1]), alpha)
         n1 = 5000
         n = 10000
         x1, x, y, c1, c = dg.pu_data(n1, n, alpha)[4:]
@@ -97,7 +100,7 @@ class PosteriorFitting:
         return fitting, dataPU
 
     @classmethod
-    def demoMultiDim(cls, nDims, nComps):
+    def demoMultiDim(cls, nDims, nComps, alpha, hypPar=None):
         NMix = NormalMixPNParameters(nDims, nComps)
         aucpn_range = [0.7, 0.75]
         irr_vec = [0.01, 0.95, False]
@@ -105,16 +108,16 @@ class PosteriorFitting:
         dg = NMix.dg
         n = 50000
         n1 = 10000
-        alpha = 0.35
+        #alpha = 0.35
         dg.alpha = alpha
         x1, x, y, c1, c = dg.pu_data(n1, n, alpha)[4:]
         posterior = np.expand_dims(dg.pn_posterior(x, alpha), axis =1)
         posterior1 =  np.expand_dims(dg.pn_posterior(x1, alpha), axis =1)
         sp.hist(posterior.flatten(), bins=20, density=True, alpha=0.5)
         sp.show( )
-        fitting = PosteriorFitting(nDims, debug=True)
+        fitting = PosteriorFitting(nDims, debug=False)
         ex = {'y': y, 'c': c, 'posterior': posterior}
         ex1 = {'c': c, 'posterior': posterior1}
         dataPU = DataPU(x, x1, ex, ex1, dg)
-        fitting.fit(dataPU)
+        fitting.fit(dataPU, hypPar = hypPar)
         return fitting, dataPU

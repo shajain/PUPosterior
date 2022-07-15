@@ -27,15 +27,15 @@ class Trainer:
             # if len(self.valLosses) >= 100 and min(self.valLosses[-100:]) > self.bestValLoss:
             #     break
             self.iter = i
-            postPosUL = self.nnLoss.posterior(self.data_val['x'])
-            postPosL = self.nnLoss.posterior(self.data_val['x1'])
+            postPosUL = self.nnLoss.posterior(self.data_val['x']).flatten()
+            postPosL = self.nnLoss.posterior(self.data_val['x1']).flatten()
+            postPosAll = np.hstack((postPosUL,postPosL))
             alphaHat = np.mean(postPosUL)
-            postPosMax = np.max(np.vstack((postPosUL, postPosL)))
-            postNegMax = np.max(1-np.vstack((postPosUL, postPosL)))
+            postPosMax = np.max(postPosAll)
+            postNegMax = np.max(1-postPosAll)
             alphaMaxHat = np.mean(postPosUL/postPosMax)
             if hypPar is None:
                 hypPar = dict()
-
             hypPar['postPosMax'] = postPosMax
             hypPar['postNegMax'] = postNegMax
             hypPar['alphaHat'] = alphaHat
