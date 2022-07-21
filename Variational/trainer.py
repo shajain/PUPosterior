@@ -108,7 +108,7 @@ class TrainerVariational(Trainer):
             hypPar['alphaHat'] = alphaHat
             hypPar['alphaMaxHat'] = alphaMaxHat
             hypPar['initialRunFlag'] = self.initialRunFlag
-            hypPar['useWeightedLoss'] = True
+            hypPar['useWeightedLoss'] = False
             hypPar['weightedLossWeight'] = 0.1
             hypPar['additiveConst'] = 0
             hypPar['useFixedPriorLoss'] = self.runWithFixedPriorFlag
@@ -139,7 +139,7 @@ class TrainerVariational(Trainer):
                 if 'alpha' not in hypPar:
                     hypPar['factor_v'] = alphaHat/alphaMaxHat
                     if postPosMax < self.postMaxLB and np.random.rand() < 0.75:
-                            hypPar['additiveConst'] = 0.2 * alphaHat * (1 - postPosMax)
+                            hypPar['additiveConst'] =  alphaHat * (1 - postPosMax)
                 else:
                     hypPar['factor_v'] = hypPar['alpha'] / alphaMaxHat
                     hypPar['additiveConst'] = 0

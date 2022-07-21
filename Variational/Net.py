@@ -37,17 +37,33 @@ class PUPosterior(NetWithLoss):
         return loss
 
 
-    def lossVariationalTF(self, x1, x, wL, wUL, pow=1):
+    def lossVariationalTF(self, x1, x, wL, wUL, pow=1, w=0.9):
         post = self.net(x)
         post1 = self.net(x1)
-        alphaHat = tf.math.reduce_mean(wUL*(post**pow))/np.mean(wUL)
-
-        loss = tf.math.log(alphaHat) - tf.math.reduce_mean(tf.math.xlogy(wL,post1))/np.mean(wL)
+        alphaHat1 = tf.math.reduce_mean(wUL * post)/np.mean(wUL)
+        alphaHat2 = tf.math.reduce_mean(wUL * (post**pow)) / np.mean(wUL)
+        loss = tf.math.log(w*alphaHat1 + (1-w)*alphaHat2) - tf.math.reduce_mean(tf.math.xlogy(wL,post1))/np.mean(wL)
+        # alphaHat = tf.math.reduce_mean(wUL * (post**pow)) / np.mean(wUL)
+        # loss = tf.math.log(alphaHat) - tf.math.reduce_mean(tf.math.xlogy(wL, post1)) / np.mean(wL)
         #priorLoss = -alpha*tf.math.log(alphaHat) - (1-alpha)* tf.math.log(1-alphaHat)
         #pdb.set_trace()
         #priorLoss = tf.nn.relu(alpha - alphaHat)
         #pdb.set_trace()
         #loss = loss + 10*priorLoss
+        return loss
+
+    def lossVariationalTF2(self, x1, x, wL, wUL, const=1):
+        post = self.net(x)
+        post1 = self.net(x1)
+        alphaHat = tf.math.reduce_mean(wUL * post) / np.mean(wUL)
+        loss = const*tf.math.log(alphaHat) - tf.math.reduce_mean(tf.math.xlogy(wL, post1)) / np.mean(wL)
+        # alphaHat = tf.math.reduce_mean(wUL * (post**pow)) / np.mean(wUL)
+        # loss = tf.math.log(alphaHat) - tf.math.reduce_mean(tf.math.xlogy(wL, post1)) / np.mean(wL)
+        # priorLoss = -alpha*tf.math.log(alphaHat) - (1-alpha)* tf.math.log(1-alphaHat)
+        # pdb.set_trace()
+        # priorLoss = tf.nn.relu(alpha - alphaHat)
+        # pdb.set_trace()
+        # loss = loss + 10*priorLoss
         return loss
 
     def lossWeightedTF2(self, x1, x, alpha, wL, wPosUL, wNegUL, modify_thr=1, pow=1):
@@ -201,7 +217,9 @@ class PUPosterior(NetWithLoss):
                 loss = self.lossWeightedTF(xx1, xx, self.alpha, wL, wPosUL, wNegUL)
                 print('using fixed alpha Loss')
             else:
-                loss = self.lossVariationalTF(xx1, xx, wL, wUL)
+                loss = self.lossVariationalTF(xx1, xx, wL, wUL, pow=1, w=1)
+                # loss = loss + self.lossVariationalTF(xx1, xx, vL, vUL, pow=0.98, w=0.5)
+                loss = loss + 0.1*self.lossVariationalTF2(xx1, xx, vL, vUL, const=0.99)
                 print('using variational Loss')
                 #loss = loss + 0.1*self.lossVariationalTF(xx1, xx, vL, vUL, hypPar['power'])
                 #loss = 0.0
